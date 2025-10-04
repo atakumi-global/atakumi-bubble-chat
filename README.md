@@ -14,6 +14,7 @@ A lightweight, customizable chat widget that can be embedded into any website wi
 ## Quick Start
 
 ### Method 1: Script Tag
+
 ```html
 <script>
   window.CHAT_CONFIG = {
@@ -25,9 +26,14 @@ A lightweight, customizable chat widget that can be embedded into any website wi
 </script>
 <script src="https://your-domain.com/chat-widget.js"></script>
 <link rel="stylesheet" href="https://your-domain.com/chat-widget.css">
-Method 2: Self-Hosted
+```
+
+### Method 2: Self-Hosted
+
 Download the files and include them in your project:
-html<script src="./chat-widget.js"></script>
+
+```html
+<script src="./chat-widget.js"></script>
 <link rel="stylesheet" href="./chat-widget.css">
 <script>
   initChatWidget({
@@ -35,52 +41,198 @@ html<script src="./chat-widget.js"></script>
     userId: 'user123'
   });
 </script>
-Configuration Options
-OptionTypeDefaultDescriptionwebhookstring''URL to send/receive messagesuserIdstringauto-generatedUnique user identifiertitlestring'Chat'Chat window titlethemestring'light'Theme (light/dark)primaryColorstring'#4F46E5'Primary brand colorpositionstring'bottom-right'Widget position on page
-Webhook Format
-Outgoing Message (POST to webhook)
-json{
+```
+
+### Method 3: CDN (via GitHub Pages)
+
+```html
+<link rel="stylesheet" href="https://YOUR_USERNAME.github.io/embeddable-chat-widget/chat-widget.css">
+<script src="https://YOUR_USERNAME.github.io/embeddable-chat-widget/chat-widget.js"></script>
+<script>
+  initChatWidget({
+    webhook: 'https://your-webhook.com/chat',
+    userId: 'user123',
+    title: 'Customer Support'
+  });
+</script>
+```
+
+## Configuration Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `webhook` | string | `''` | URL to send/receive messages |
+| `userId` | string | auto-generated | Unique user identifier |
+| `title` | string | `'Chat'` | Chat window title |
+| `theme` | string | `'light'` | Theme (`light` or `dark`) |
+| `primaryColor` | string | `'#4F46E5'` | Primary brand color |
+| `position` | string | `'bottom-right'` | Widget position on page |
+| `storageKey` | string | `'chatMessages'` | LocalStorage key for messages |
+
+## Webhook Integration
+
+### Outgoing Message (POST to webhook)
+
+When a user sends a message, the widget posts to your webhook URL with this format:
+
+```json
+{
   "text": "User message",
   "sender": "user",
   "timestamp": "2025-10-04T12:00:00.000Z",
   "userId": "user123"
 }
-Expected Response
-json{
+```
+
+### Expected Response
+
+Your webhook should respond with:
+
+```json
+{
   "message": "Bot response text",
   "timestamp": "2025-10-04T12:00:01.000Z"
 }
-Browser Support
+```
 
-Chrome/Edge 90+
-Firefox 88+
-Safari 14+
+Alternatively, you can use `response` instead of `message`:
 
-License
-MIT
+```json
+{
+  "response": "Bot response text"
+}
+```
 
-## 📄 index.html (Standalone Version)
+## Project Structure
+
+```
+embeddable-chat-widget/
+├── README.md
+├── index.html          # Standalone version
+├── chat-widget.js      # Main JavaScript file
+├── chat-widget.css     # Styles
+└── examples/
+    └── demo.html       # Demo page
+```
+
+## Installation & Development
+
+### Clone the Repository
+
+```bash
+git clone https://github.com/YOUR_USERNAME/embeddable-chat-widget.git
+cd embeddable-chat-widget
+```
+
+### Test Locally
+
+Simply open `index.html` or `examples/demo.html` in your browser. No build process required!
+
+### Deploy to GitHub Pages
+
+1. Push your code to GitHub
+2. Go to Settings → Pages
+3. Select "Deploy from main branch"
+4. Your widget will be live at: `https://YOUR_USERNAME.github.io/embeddable-chat-widget/`
+
+## Usage Examples
+
+### Basic Implementation
+
 ```html
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Widget - Standalone</title>
-    <link rel="stylesheet" href="chat-widget.css">
+  <link rel="stylesheet" href="chat-widget.css">
 </head>
 <body>
-    <div id="chat-widget-root"></div>
-    <script src="chat-widget.js"></script>
-    <script>
-        // Initialize with configuration
-        initChatWidget({
-            webhook: new URLSearchParams(window.location.search).get('webhook') || '',
-            userId: new URLSearchParams(window.location.search).get('userId') || '',
-            title: new URLSearchParams(window.location.search).get('title') || 'Chat',
-            theme: new URLSearchParams(window.location.search).get('theme') || 'light',
-            primaryColor: new URLSearchParams(window.location.search).get('primaryColor') || '#4F46E5'
-        });
-    </script>
+  <h1>My Website</h1>
+  
+  <script src="chat-widget.js"></script>
+  <script>
+    initChatWidget({
+      webhook: 'https://api.myapp.com/chat',
+      userId: 'user_12345',
+      title: 'Help Center'
+    });
+  </script>
 </body>
 </html>
+```
+
+### Dark Theme
+
+```javascript
+initChatWidget({
+  webhook: 'https://api.myapp.com/chat',
+  theme: 'dark',
+  primaryColor: '#8B5CF6'
+});
+```
+
+### Custom Branding
+
+```javascript
+initChatWidget({
+  webhook: 'https://api.myapp.com/chat',
+  title: 'Acme Support',
+  primaryColor: '#FF6B6B',
+  userId: 'customer_' + Date.now()
+});
+```
+
+## API Methods
+
+After initialization, you can access the widget instance:
+
+```javascript
+const chatWidget = initChatWidget({ /* config */ });
+
+// Methods (if you extend the class)
+chatWidget.toggleMinimize();  // Minimize/maximize
+chatWidget.close();            // Close the widget
+```
+
+## Browser Support
+
+- Chrome/Edge 90+
+- Firefox 88+
+- Safari 14+
+- Mobile browsers (iOS Safari, Chrome Mobile)
+
+## Features Roadmap
+
+- [ ] File upload support
+- [ ] Rich text formatting
+- [ ] Emoji picker
+- [ ] Sound notifications
+- [ ] Read receipts
+- [ ] Typing indicators for multiple users
+- [ ] Message reactions
+- [ ] Chat history export
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## License
+
+MIT License - feel free to use this in your projects!
+
+## Support
+
+If you encounter any issues or have questions:
+
+1. Check the [examples/demo.html](examples/demo.html) file
+2. Open an issue on GitHub
+3. Review the webhook integration section above
+
+## Credits
+
+Created as a lightweight alternative to iframe-based chat widgets. No dependencies required!
