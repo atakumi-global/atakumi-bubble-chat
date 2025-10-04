@@ -3,66 +3,470 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Widget Demo</title>
+    <title>Chat Widget Creator</title>
     <link rel="stylesheet" href="../chat-widget.css">
     <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
-            font-family: system-ui, -apple-system, sans-serif;
-            max-width: 800px;
-            margin: 50px auto;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f9fafb;
             padding: 20px;
             line-height: 1.6;
         }
-        h1 { color: #1f2937; }
-        .demo-section {
-            background: #f9fafb;
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #1f2937;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .panel h2 {
+            color: #1f2937;
+            margin-bottom: 20px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #374151;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4F46E5;
+        }
+
+        .form-group input[type="color"] {
+            height: 40px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #4F46E5;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #4338CA;
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+
+        .code-block {
+            background: #1f2937;
+            color: #f9fafb;
             padding: 20px;
             border-radius: 8px;
-            margin: 20px 0;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-x: auto;
+            margin-top: 15px;
+            position: relative;
         }
-        code {
-            background: #e5e7eb;
-            padding: 2px 6px;
+
+        .copy-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #374151;
+            color: white;
+            border: none;
+            padding: 6px 12px;
             border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .copy-button:hover {
+            background: #4b5563;
+        }
+
+        .copy-button.copied {
+            background: #10b981;
+        }
+
+        .preview-info {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            padding: 15px;
+            border-radius: 8px;
+            color: #1e40af;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        @media (max-width: 1024px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .keyword {
+            color: #c678dd;
+        }
+        .string {
+            color: #98c379;
+        }
+        .number {
+            color: #d19a66;
+        }
+        .boolean {
+            color: #56b6c2;
         }
     </style>
 </head>
 <body>
-    <h1>Chat Widget Demo</h1>
-    
-    <div class="demo-section">
-        <h2>Usage Example</h2>
-        <p>The chat widget is initialized with the following configuration:</p>
-        <pre><code>{
-  webhook: 'https://httpbin.org/post',
-  userId: 'demo_user',
-  title: 'Demo Chat',
-  theme: 'light',
-  primaryColor: '#4F46E5'
-}</code></pre>
-        <p>Try sending a message! (This demo uses httpbin.org which will echo back your request)</p>
-    </div>
+    <div class="container">
+        <h1>🎨 Chat Widget Creator</h1>
+        <p class="subtitle">Configure your chat widget and see the results in real-time</p>
 
-    <div class="demo-section">
-        <h2>Features</h2>
-        <ul>
-            <li>✅ Persistent message history (localStorage)</li>
-            <li>✅ Typing indicator</li>
-            <li>✅ Minimize/maximize</li>
-            <li>✅ Responsive design</li>
-            <li>✅ Webhook integration</li>
-            <li>✅ Customizable theme</li>
-        </ul>
+        <div class="layout">
+            <!-- Configuration Form -->
+            <div class="panel">
+                <h2>⚙️ Configuration</h2>
+                
+                <div class="form-group">
+                    <label for="webhook">Webhook URL</label>
+                    <input type="text" id="webhook" placeholder="https://your-api.com/chat">
+                    <p class="help-text">The endpoint where messages will be sent</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="campaignId">Campaign ID</label>
+                    <input type="number" id="campaignId" placeholder="5">
+                    <p class="help-text">Identifier for your campaign (optional)</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="title">Chat Title</label>
+                    <input type="text" id="title" value="Chat">
+                    <p class="help-text">Title shown in the chat header</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="theme">Theme</label>
+                    <select id="theme">
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="primaryColor">Primary Color</label>
+                    <input type="color" id="primaryColor" value="#4F46E5">
+                </div>
+
+                <div class="form-group">
+                    <label for="position">Position</label>
+                    <select id="position">
+                        <option value="bottom-right">Bottom Right</option>
+                        <option value="bottom-left">Bottom Left</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="startCollapsed" checked>
+                        <label for="startCollapsed">Start Collapsed</label>
+                    </div>
+                    <p class="help-text">Show as bubble button initially</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="bubbleMessage">Bubble Message</label>
+                    <input type="text" id="bubbleMessage" value="Chat with us!">
+                    <p class="help-text">Teaser message on the bubble</p>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="updateWidget()">Apply Changes</button>
+                    <button class="btn btn-secondary" onclick="resetForm()">Reset</button>
+                </div>
+            </div>
+
+            <!-- Preview & Code -->
+            <div class="panel">
+                <h2>👁️ Preview & Code</h2>
+                
+                <div class="preview-info">
+                    <strong>Preview:</strong> The widget will appear in the bottom right corner of this page. Click "Apply Changes" to see your configuration in action!
+                </div>
+
+                <h3 style="margin-bottom: 10px; font-size: 16px; color: #374151;">Embed Code</h3>
+                
+                <div class="code-block">
+                    <button class="copy-button" onclick="copyCode()">Copy</button>
+                    <pre id="embedCode"></pre>
+                </div>
+
+                <h3 style="margin: 20px 0 10px 0; font-size: 16px; color: #374151;">JavaScript Only</h3>
+                
+                <div class="code-block">
+                    <button class="copy-button" onclick="copyJsCode()">Copy</button>
+                    <pre id="jsCode"></pre>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="../chat-widget.js"></script>
     <script>
-        initChatWidget({
-            webhook: 'https://httpbin.org/post',
-            userId: 'demo_user',
-            title: 'Demo Chat',
-            theme: 'light',
-            primaryColor: '#4F46E5'
+        let currentWidget = null;
+
+        // Load saved configuration from localStorage
+        function loadConfig() {
+            const saved = localStorage.getItem('chatWidgetConfig');
+            if (saved) {
+                try {
+                    const config = JSON.parse(saved);
+                    document.getElementById('webhook').value = config.webhook || '';
+                    document.getElementById('campaignId').value = config.campaignId || '';
+                    document.getElementById('title').value = config.title || 'Chat';
+                    document.getElementById('theme').value = config.theme || 'light';
+                    document.getElementById('primaryColor').value = config.primaryColor || '#4F46E5';
+                    document.getElementById('position').value = config.position || 'bottom-right';
+                    document.getElementById('startCollapsed').checked = config.startCollapsed !== false;
+                    document.getElementById('bubbleMessage').value = config.bubbleMessage || 'Chat with us!';
+                } catch (e) {
+                    console.error('Error loading config:', e);
+                }
+            }
+        }
+
+        // Save configuration to localStorage
+        function saveConfig() {
+            const config = getConfig();
+            localStorage.setItem('chatWidgetConfig', JSON.stringify(config));
+        }
+
+        // Get current configuration from form
+        function getConfig() {
+            return {
+                webhook: document.getElementById('webhook').value,
+                campaignId: parseInt(document.getElementById('campaignId').value) || null,
+                title: document.getElementById('title').value,
+                theme: document.getElementById('theme').value,
+                primaryColor: document.getElementById('primaryColor').value,
+                position: document.getElementById('position').value,
+                startCollapsed: document.getElementById('startCollapsed').checked,
+                bubbleMessage: document.getElementById('bubbleMessage').value
+            };
+        }
+
+        // Update the widget with current configuration
+        function updateWidget() {
+            // Remove existing widget
+            if (currentWidget) {
+                currentWidget.close();
+            }
+
+            // Get and save config
+            const config = getConfig();
+            saveConfig();
+
+            // Create new widget
+            currentWidget = initChatWidget(config);
+
+            // Update code displays
+            updateEmbedCode(config);
+        }
+
+        // Generate and display embed code
+        function updateEmbedCode(config) {
+            const embedCode = `<span class="keyword">&lt;link</span> <span class="string">rel="stylesheet"</span> <span class="string">href="https://your-domain.com/chat-widget.css"</span><span class="keyword">&gt;</span>
+<span class="keyword">&lt;script</span> <span class="string">src="https://your-domain.com/chat-widget.js"</span><span class="keyword">&gt;&lt;/script&gt;</span>
+<span class="keyword">&lt;script&gt;</span>
+  <span class="keyword">initChatWidget</span>({
+    <span class="string">webhook</span>: <span class="string">'${config.webhook || ''}'</span>,${config.campaignId ? `\n    <span class="string">campaignId</span>: <span class="number">${config.campaignId}</span>,` : ''}
+    <span class="string">title</span>: <span class="string">'${config.title}'</span>,
+    <span class="string">theme</span>: <span class="string">'${config.theme}'</span>,
+    <span class="string">primaryColor</span>: <span class="string">'${config.primaryColor}'</span>,
+    <span class="string">startCollapsed</span>: <span class="boolean">${config.startCollapsed}</span>,
+    <span class="string">bubbleMessage</span>: <span class="string">'${config.bubbleMessage}'</span>
+  });
+<span class="keyword">&lt;/script&gt;</span>`;
+
+            const jsCode = `<span class="keyword">initChatWidget</span>({
+  <span class="string">webhook</span>: <span class="string">'${config.webhook || ''}'</span>,${config.campaignId ? `\n  <span class="string">campaignId</span>: <span class="number">${config.campaignId}</span>,` : ''}
+  <span class="string">title</span>: <span class="string">'${config.title}'</span>,
+  <span class="string">theme</span>: <span class="string">'${config.theme}'</span>,
+  <span class="string">primaryColor</span>: <span class="string">'${config.primaryColor}'</span>,
+  <span class="string">startCollapsed</span>: <span class="boolean">${config.startCollapsed}</span>,
+  <span class="string">bubbleMessage</span>: <span class="string">'${config.bubbleMessage}'</span>
+});`;
+
+            document.getElementById('embedCode').innerHTML = embedCode;
+            document.getElementById('jsCode').innerHTML = jsCode;
+        }
+
+        // Copy embed code to clipboard
+        function copyCode() {
+            const config = getConfig();
+            const code = `<link rel="stylesheet" href="https://your-domain.com/chat-widget.css">
+<script src="https://your-domain.com/chat-widget.js"></script>
+<script>
+  initChatWidget({
+    webhook: '${config.webhook || ''}',${config.campaignId ? `\n    campaignId: ${config.campaignId},` : ''}
+    title: '${config.title}',
+    theme: '${config.theme}',
+    primaryColor: '${config.primaryColor}',
+    startCollapsed: ${config.startCollapsed},
+    bubbleMessage: '${config.bubbleMessage}'
+  });
+</script>`;
+            
+            navigator.clipboard.writeText(code).then(() => {
+                showCopied(event.target);
+            });
+        }
+
+        // Copy JS code to clipboard
+        function copyJsCode() {
+            const config = getConfig();
+            const code = `initChatWidget({
+  webhook: '${config.webhook || ''}',${config.campaignId ? `\n  campaignId: ${config.campaignId},` : ''}
+  title: '${config.title}',
+  theme: '${config.theme}',
+  primaryColor: '${config.primaryColor}',
+  startCollapsed: ${config.startCollapsed},
+  bubbleMessage: '${config.bubbleMessage}'
+});`;
+            
+            navigator.clipboard.writeText(code).then(() => {
+                showCopied(event.target);
+            });
+        }
+
+        // Show "Copied!" feedback
+        function showCopied(button) {
+            const originalText = button.textContent;
+            button.textContent = 'Copied!';
+            button.classList.add('copied');
+            
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.classList.remove('copied');
+            }, 2000);
+        }
+
+        // Reset form to defaults
+        function resetForm() {
+            if (confirm('Reset all settings to defaults?')) {
+                localStorage.removeItem('chatWidgetConfig');
+                document.getElementById('webhook').value = '';
+                document.getElementById('campaignId').value = '';
+                document.getElementById('title').value = 'Chat';
+                document.getElementById('theme').value = 'light';
+                document.getElementById('primaryColor').value = '#4F46E5';
+                document.getElementById('position').value = 'bottom-right';
+                document.getElementById('startCollapsed').checked = true;
+                document.getElementById('bubbleMessage').value = 'Chat with us!';
+                
+                updateWidget();
+            }
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadConfig();
+            updateWidget();
         });
     </script>
 </body>
