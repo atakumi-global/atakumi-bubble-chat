@@ -4,7 +4,6 @@ A lightweight, customizable chat widget that can be embedded into any website wi
 
 ## Features
 
-- 🚀 No iframe required - direct DOM injection
 - ⚙️ Configurable via URL parameters or JavaScript
 - 💾 Local message persistence
 - 🎨 Customizable themes and colors
@@ -20,6 +19,7 @@ A lightweight, customizable chat widget that can be embedded into any website wi
   window.CHAT_CONFIG = {
     webhook: 'https://your-webhook.com/chat',
     userId: 'user123',
+    campaignId: 'spring_sale_2025',
     title: 'Support Chat',
     primaryColor: '#4F46E5'
   };
@@ -63,6 +63,8 @@ Download the files and include them in your project:
 |--------|------|---------|-------------|
 | `webhook` | string | `''` | URL to send/receive messages |
 | `userId` | string | auto-generated | Unique user identifier |
+| `sessionId` | string | auto-generated | Session identifier (auto-created if not provided) |
+| `campaignId` | string | `null` | Campaign identifier for backend webhook settings |
 | `title` | string | `'Chat'` | Chat window title |
 | `theme` | string | `'light'` | Theme (`light` or `dark`) |
 | `primaryColor` | string | `'#4F46E5'` | Primary brand color |
@@ -77,30 +79,23 @@ When a user sends a message, the widget posts to your webhook URL with this form
 
 ```json
 {
-  "text": "User message",
-  "sender": "user",
-  "timestamp": "2025-10-04T12:00:00.000Z",
-  "userId": "user123"
+  "sessionId": "541f2a7e-cc17-4825-a129-1a2cfaf80022",
+  "action": "sendMessage",
+  "chatInput": "Hello, I need help",
+  "campaignid": 5
 }
 ```
 
 ### Expected Response
 
-Your webhook should respond with:
+Your webhook should respond with an array containing the output:
 
 ```json
-{
-  "message": "Bot response text",
-  "timestamp": "2025-10-04T12:00:01.000Z"
-}
-```
-
-Alternatively, you can use `response` instead of `message`:
-
-```json
-{
-  "response": "Bot response text"
-}
+[
+  {
+    "output": "Hello! How can I assist you today?"
+  }
+]
 ```
 
 ## Project Structure
@@ -112,7 +107,7 @@ embeddable-chat-widget/
 ├── chat-widget.js      # Main JavaScript file
 ├── chat-widget.css     # Styles
 └── examples/
-    └── demo.html       # Demo page
+    └── index.html      # Demo page
 ```
 
 ## Installation & Development
@@ -126,7 +121,7 @@ cd embeddable-chat-widget
 
 ### Test Locally
 
-Simply open `index.html` or `examples/demo.html` in your browser. No build process required!
+Simply open `index.html` or `examples/index.html` in your browser. No build process required!
 
 ### Deploy to GitHub Pages
 
@@ -175,8 +170,7 @@ initChatWidget({
 ```javascript
 initChatWidget({
   webhook: 'https://api.myapp.com/chat',
-  title: 'Acme Support',
-  primaryColor: '#FF6B6B',
+  campaignId: 'holiday_2025',
   userId: 'customer_' + Date.now()
 });
 ```
@@ -229,7 +223,7 @@ MIT License - feel free to use this in your projects!
 
 If you encounter any issues or have questions:
 
-1. Check the [examples/demo.html](examples/demo.html) file
+1. Check the [examples/index.html](examples/index.html) file
 2. Open an issue on GitHub
 3. Review the webhook integration section above
 

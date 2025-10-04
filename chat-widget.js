@@ -10,7 +10,9 @@
         constructor(config = {}) {
             this.config = {
                 webhook: config.webhook || window.CHAT_CONFIG?.webhook || '',
-                userId: config.userId || window.CHAT_CONFIG?.userId || 'user_' + Date.now(),
+                userId: config.userId || window.CHAT_CONFIG?.userId || this.generateId('user'),
+                sessionId: config.sessionId || window.CHAT_CONFIG?.sessionId || this.generateSessionId(),
+                campaignId: config.campaignId || window.CHAT_CONFIG?.campaignId || null,
                 title: config.title || window.CHAT_CONFIG?.title || 'Chat',
                 theme: config.theme || window.CHAT_CONFIG?.theme || 'light',
                 primaryColor: config.primaryColor || window.CHAT_CONFIG?.primaryColor || '#4F46E5',
@@ -23,6 +25,23 @@
             this.isTyping = false;
 
             this.init();
+        }
+
+        generateId(prefix) {
+            return prefix + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        generateSessionId() {
+            // Check if sessionId exists in sessionStorage
+            const storedSessionId = sessionStorage.getItem('chat_session_id');
+            if (storedSessionId) {
+                return storedSessionId;
+            }
+
+            // Generate new sessionId
+            const newSessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            sessionStorage.setItem('chat_session_id', newSessionId);
+            return newSessionId;
         }
 
         init() {
@@ -135,14 +154,13 @@
             
             if (!text) return;
 
-            const message = {
+            const userMessage = {
                 text: text,
                 sender: 'user',
-                timestamp: new Date().toISOString(),
-                userId: this.config.userId
+                timestamp: new Date().toISOString()
             };
 
-            this.messages.push(message);
+            this.messages.push(userMessage);
             this.saveMessages();
             this.renderMessages();
             input.value = '';
@@ -152,12 +170,20 @@
                 this.showTypingIndicator();
                 
                 try {
+                    // Prepare webhook payload
+                    const payload = {
+                        sessionId: this.config.sessionId,
+                        action: "sendMessage",
+                        chatInput: text,
+                        campaignid: this.config.campaignId
+                    };
+
                     const response = await fetch(this.config.webhook, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify(message)
+                        body: JSON.stringify(payload)
                     });
 
                     this.hideTypingIndicator();
@@ -165,11 +191,12 @@
                     if (response.ok) {
                         const data = await response.json();
                         
-                        if (data.message || data.response) {
+                        // Handle response as array with output field
+                        if (Array.isArray(data) && data.length > 0 && data[0].output) {
                             const botMessage = {
-                                text: data.message || data.response,
+                                text: data[0].output,
                                 sender: 'bot',
-                                timestamp: data.timestamp || new Date().toISOString()
+                                timestamp: new Date().toISOString()
                             };
                             this.messages.push(botMessage);
                             this.saveMessages();
