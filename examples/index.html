@@ -306,7 +306,7 @@
         </div>
     </div>
 
-    <script src="../chat-widget.js"></script>
+    <script src="../chat-widget.js" id="chat-widget-script"></script>
     <script>
         let currentWidget = null;
 
@@ -352,6 +352,12 @@
 
         // Update the widget with current configuration
         function updateWidget() {
+            // Check if initChatWidget is available
+            if (typeof initChatWidget !== 'function') {
+                console.error('Chat widget not loaded yet');
+                return;
+            }
+
             // Remove existing widget
             if (currentWidget) {
                 currentWidget.close();
@@ -362,7 +368,11 @@
             saveConfig();
 
             // Create new widget
-            currentWidget = initChatWidget(config);
+            try {
+                currentWidget = initChatWidget(config);
+            } catch (error) {
+                console.error('Error initializing widget:', error);
+            }
 
             // Update code displays
             updateEmbedCode(config);
@@ -370,26 +380,39 @@
 
         // Generate and display embed code
         function updateEmbedCode(config) {
+            // Escape special characters in strings
+            const escapeHtml = (str) => {
+                return String(str)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            };
+
+            const campaignIdLine = config.campaignId ? `\n    <span class="string">campaignId</span>: <span class="number">${config.campaignId}</span>,` : '';
+            const jsCampaignIdLine = config.campaignId ? `\n  <span class="string">campaignId</span>: <span class="number">${config.campaignId}</span>,` : '';
+
             const embedCode = `<span class="keyword">&lt;link</span> <span class="string">rel="stylesheet"</span> <span class="string">href="https://your-domain.com/chat-widget.css"</span><span class="keyword">&gt;</span>
 <span class="keyword">&lt;script</span> <span class="string">src="https://your-domain.com/chat-widget.js"</span><span class="keyword">&gt;&lt;/script&gt;</span>
 <span class="keyword">&lt;script&gt;</span>
   <span class="keyword">initChatWidget</span>({
-    <span class="string">webhook</span>: <span class="string">'${config.webhook || ''}'</span>,${config.campaignId ? `\n    <span class="string">campaignId</span>: <span class="number">${config.campaignId}</span>,` : ''}
-    <span class="string">title</span>: <span class="string">'${config.title}'</span>,
-    <span class="string">theme</span>: <span class="string">'${config.theme}'</span>,
-    <span class="string">primaryColor</span>: <span class="string">'${config.primaryColor}'</span>,
+    <span class="string">webhook</span>: <span class="string">'${escapeHtml(config.webhook || '')}'</span>,${campaignIdLine}
+    <span class="string">title</span>: <span class="string">'${escapeHtml(config.title)}'</span>,
+    <span class="string">theme</span>: <span class="string">'${escapeHtml(config.theme)}'</span>,
+    <span class="string">primaryColor</span>: <span class="string">'${escapeHtml(config.primaryColor)}'</span>,
     <span class="string">startCollapsed</span>: <span class="boolean">${config.startCollapsed}</span>,
-    <span class="string">bubbleMessage</span>: <span class="string">'${config.bubbleMessage}'</span>
+    <span class="string">bubbleMessage</span>: <span class="string">'${escapeHtml(config.bubbleMessage)}'</span>
   });
 <span class="keyword">&lt;/script&gt;</span>`;
 
             const jsCode = `<span class="keyword">initChatWidget</span>({
-  <span class="string">webhook</span>: <span class="string">'${config.webhook || ''}'</span>,${config.campaignId ? `\n  <span class="string">campaignId</span>: <span class="number">${config.campaignId}</span>,` : ''}
-  <span class="string">title</span>: <span class="string">'${config.title}'</span>,
-  <span class="string">theme</span>: <span class="string">'${config.theme}'</span>,
-  <span class="string">primaryColor</span>: <span class="string">'${config.primaryColor}'</span>,
+  <span class="string">webhook</span>: <span class="string">'${escapeHtml(config.webhook || '')}'</span>,${jsCampaignIdLine}
+  <span class="string">title</span>: <span class="string">'${escapeHtml(config.title)}'</span>,
+  <span class="string">theme</span>: <span class="string">'${escapeHtml(config.theme)}'</span>,
+  <span class="string">primaryColor</span>: <span class="string">'${escapeHtml(config.primaryColor)}'</span>,
   <span class="string">startCollapsed</span>: <span class="boolean">${config.startCollapsed}</span>,
-  <span class="string">bubbleMessage</span>: <span class="string">'${config.bubbleMessage}'</span>
+  <span class="string">bubbleMessage</span>: <span class="string">'${escapeHtml(config.bubbleMessage)}'</span>
 });`;
 
             document.getElementById('embedCode').innerHTML = embedCode;
@@ -397,20 +420,21 @@
         }
 
         // Copy embed code to clipboard
-        function copyCode() {
+        function copyCode(event) {
             const config = getConfig();
+            const campaignIdLine = config.campaignId ? `\n    campaignId: ${config.campaignId},` : '';
             const code = `<link rel="stylesheet" href="https://your-domain.com/chat-widget.css">
-<script src="https://your-domain.com/chat-widget.js"></script>
+<script src="https://your-domain.com/chat-widget.js"><\/script>
 <script>
   initChatWidget({
-    webhook: '${config.webhook || ''}',${config.campaignId ? `\n    campaignId: ${config.campaignId},` : ''}
+    webhook: '${config.webhook || ''}',${campaignIdLine}
     title: '${config.title}',
     theme: '${config.theme}',
     primaryColor: '${config.primaryColor}',
     startCollapsed: ${config.startCollapsed},
     bubbleMessage: '${config.bubbleMessage}'
   });
-</script>`;
+<\/script>`;
             
             navigator.clipboard.writeText(code).then(() => {
                 showCopied(event.target);
@@ -418,10 +442,11 @@
         }
 
         // Copy JS code to clipboard
-        function copyJsCode() {
+        function copyJsCode(event) {
             const config = getConfig();
+            const campaignIdLine = config.campaignId ? `\n  campaignId: ${config.campaignId},` : '';
             const code = `initChatWidget({
-  webhook: '${config.webhook || ''}',${config.campaignId ? `\n  campaignId: ${config.campaignId},` : ''}
+  webhook: '${config.webhook || ''}',${campaignIdLine}
   title: '${config.title}',
   theme: '${config.theme}',
   primaryColor: '${config.primaryColor}',
@@ -464,10 +489,41 @@
         }
 
         // Initialize on page load
-        window.addEventListener('DOMContentLoaded', () => {
+        function initializePage() {
             loadConfig();
             updateWidget();
+        }
+
+        // Wait for both DOM and chat widget script to load
+        let scriptLoaded = false;
+        let domLoaded = false;
+
+        function checkAndInit() {
+            if (scriptLoaded && domLoaded) {
+                initializePage();
+            }
+        }
+
+        // Check if script is already loaded
+        document.getElementById('chat-widget-script').addEventListener('load', () => {
+            scriptLoaded = true;
+            checkAndInit();
         });
+
+        // Check if DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                domLoaded = true;
+                checkAndInit();
+            });
+        } else {
+            domLoaded = true;
+            // If script is already loaded (cached), initialize immediately
+            if (typeof initChatWidget === 'function') {
+                scriptLoaded = true;
+            }
+            checkAndInit();
+        }
     </script>
 </body>
 </html>
