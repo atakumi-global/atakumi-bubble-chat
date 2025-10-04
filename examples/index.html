@@ -224,7 +224,7 @@
                 
                 <div class="form-group">
                     <label for="webhook">Webhook URL</label>
-                    <input type="text" id="webhook" placeholder="https://your-api.com/chat">
+                    <input type="text" id="webhook" value="https://httpbin.org/post" placeholder="https://httpbin.org/post">
                     <p class="help-text">The endpoint where messages will be sent</p>
                 </div>
 
@@ -316,7 +316,7 @@
             if (saved) {
                 try {
                     const config = JSON.parse(saved);
-                    document.getElementById('webhook').value = config.webhook || '';
+                    document.getElementById('webhook').value = config.webhook || 'https://httpbin.org/post';
                     document.getElementById('campaignId').value = config.campaignId || '';
                     document.getElementById('title').value = config.title || 'Chat';
                     document.getElementById('theme').value = config.theme || 'light';
@@ -475,7 +475,7 @@
         function resetForm() {
             if (confirm('Reset all settings to defaults?')) {
                 localStorage.removeItem('chatWidgetConfig');
-                document.getElementById('webhook').value = '';
+                document.getElementById('webhook').value = 'https://httpbin.org/post';
                 document.getElementById('campaignId').value = '';
                 document.getElementById('title').value = 'Chat';
                 document.getElementById('theme').value = 'light';
