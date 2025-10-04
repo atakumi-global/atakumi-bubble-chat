@@ -16,35 +16,73 @@
                 theme: config.theme || window.CHAT_CONFIG?.theme || 'light',
                 primaryColor: config.primaryColor || window.CHAT_CONFIG?.primaryColor || '#4F46E5',
                 position: config.position || window.CHAT_CONFIG?.position || 'bottom-right',
-                storageKey: config.storageKey || 'chatMessages'
+                storageKey: config.storageKey || 'chatMessages',
+                startCollapsed: config.startCollapsed !== undefined ? config.startCollapsed : (window.CHAT_CONFIG?.startCollapsed !== undefined ? window.CHAT_CONFIG.startCollapsed : true),
+                bubbleMessage: config.bubbleMessage || window.CHAT_CONFIG?.bubbleMessage || 'Chat with us!',
+                bubbleIcon: config.bubbleIcon || window.CHAT_CONFIG?.bubbleIcon || null
             };
 
             this.messages = this.loadMessages();
             this.isMinimized = false;
+            this.isExpanded = !this.config.startCollapsed;
             this.isTyping = false;
 
             this.init();
         }
 
         generateSessionId() {
-            // Check if sessionId exists in sessionStorage
             const storedSessionId = sessionStorage.getItem('chat_session_id');
             if (storedSessionId) {
                 return storedSessionId;
             }
 
-            // Generate new sessionId
             const newSessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
             sessionStorage.setItem('chat_session_id', newSessionId);
             return newSessionId;
         }
 
         init() {
+            this.createBubble();
             this.createWidget();
             this.applyTheme();
             this.renderMessages();
             this.attachEventListeners();
+            
+            if (this.config.startCollapsed) {
+                this.container.classList.add('hidden');
+            } else {
+                this.bubble.classList.add('hidden');
+                this.bubbleMessageEl.classList.add('hidden');
+            }
+            
             this.loadPreviousSession();
+        }
+
+        createBubble() {
+            const bubble = document.createElement('button');
+            bubble.className = 'chat-bubble-button';
+            bubble.setAttribute('aria-label', 'Open chat');
+            
+            const defaultIcon = `
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
+                    <circle cx="12" cy="10" r="1.5"/>
+                    <circle cx="8" cy="10" r="1.5"/>
+                    <circle cx="16" cy="10" r="1.5"/>
+                </svg>
+            `;
+            
+            bubble.innerHTML = this.config.bubbleIcon || defaultIcon;
+            
+            const bubbleMessage = document.createElement('div');
+            bubbleMessage.className = 'chat-bubble-message';
+            bubbleMessage.textContent = this.config.bubbleMessage;
+            
+            document.body.appendChild(bubble);
+            document.body.appendChild(bubbleMessage);
+            
+            this.bubble = bubble;
+            this.bubbleMessageEl = bubbleMessage;
         }
 
         createWidget() {
@@ -80,6 +118,7 @@
         applyTheme() {
             if (this.config.theme === 'dark') {
                 this.container.classList.add('dark');
+                this.bubbleMessageEl.classList.add('dark');
             }
             
             document.documentElement.style.setProperty('--chat-primary-color', this.config.primaryColor);
@@ -96,11 +135,29 @@
                 if (e.key === 'Enter') this.sendMessage();
             });
             minimizeBtn.addEventListener('click', () => this.toggleMinimize());
-            closeBtn.addEventListener('click', () => this.close());
+            closeBtn.addEventListener('click', () => this.collapseToButton());
+            
+            this.bubble.addEventListener('click', () => this.expandFromButton());
+        }
+
+        expandFromButton() {
+            this.isExpanded = true;
+            this.bubble.classList.add('hidden');
+            this.bubbleMessageEl.classList.add('hidden');
+            this.container.classList.remove('hidden');
+            
+            const input = document.getElementById('chat-input');
+            if (input) input.focus();
+        }
+
+        collapseToButton() {
+            this.isExpanded = false;
+            this.container.classList.add('hidden');
+            this.bubble.classList.remove('hidden');
+            this.bubbleMessageEl.classList.remove('hidden');
         }
 
         async loadPreviousSession() {
-            // Check if there are existing messages for this session
             if (this.messages.length > 0 && this.config.webhook) {
                 try {
                     const payload = {
@@ -120,7 +177,6 @@
                     if (response.ok) {
                         const data = await response.json();
                         
-                        // Handle response as array with output field
                         if (Array.isArray(data) && data.length > 0 && data[0].output) {
                             const botMessage = {
                                 text: data[0].output,
@@ -200,12 +256,10 @@
             this.renderMessages();
             input.value = '';
 
-            // Send to webhook
             if (this.config.webhook) {
                 this.showTypingIndicator();
                 
                 try {
-                    // Prepare webhook payload
                     const payload = {
                         sessionId: this.config.sessionId,
                         action: "sendMessage",
@@ -226,7 +280,6 @@
                     if (response.ok) {
                         const data = await response.json();
                         
-                        // Handle response as array with output field
                         if (Array.isArray(data) && data.length > 0 && data[0].output) {
                             const botMessage = {
                                 text: data[0].output,
@@ -264,6 +317,12 @@
             if (this.container) {
                 this.container.remove();
             }
+            if (this.bubble) {
+                this.bubble.remove();
+            }
+            if (this.bubbleMessageEl) {
+                this.bubbleMessageEl.remove();
+            }
         }
 
         escapeHtml(text) {
@@ -278,12 +337,10 @@
         }
     }
 
-    // Global initialization function
     window.initChatWidget = function(config) {
         return new ChatWidget(config);
     };
 
-    // Auto-initialize if config exists
     if (window.CHAT_CONFIG) {
         window.addEventListener('DOMContentLoaded', () => {
             window.initChatWidget(window.CHAT_CONFIG);

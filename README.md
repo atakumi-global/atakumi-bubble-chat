@@ -69,6 +69,9 @@ Download the files and include them in your project:
 | `primaryColor` | string | `'#4F46E5'` | Primary brand color |
 | `position` | string | `'bottom-right'` | Widget position on page |
 | `storageKey` | string | `'chatMessages'` | LocalStorage key for messages |
+| `startCollapsed` | boolean | `true` | Start with chat collapsed (bubble button) |
+| `bubbleMessage` | string | `'Chat with us!'` | Teaser message shown on collapsed bubble |
+| `bubbleIcon` | string | SVG path | Custom icon for the chat bubble button |
 
 ## Webhook Integration
 
@@ -188,7 +191,10 @@ initChatWidget({
 ```javascript
 initChatWidget({
   webhook: 'https://api.myapp.com/chat',
-  campaignId: 'holiday_2025'
+  title: 'Acme Support',
+  primaryColor: '#FF6B6B',
+  startCollapsed: true,
+  bubbleMessage: 'Need help? Click here!'
 });
 ```
 
