@@ -1,9 +1,10 @@
 # Embeddable Chat Widget
 
-A lightweight, customizable chat widget that can be embedded into any website without iframes.
+A lightweight, customizable chat widget that can be embedded directly into any website.
 
 ## Features
 
+- 🚀 Direct DOM injection - integrates seamlessly into your page
 - ⚙️ Configurable via URL parameters or JavaScript
 - 💾 Local message persistence
 - 🎨 Customizable themes and colors
@@ -18,7 +19,6 @@ A lightweight, customizable chat widget that can be embedded into any website wi
 <script>
   window.CHAT_CONFIG = {
     webhook: 'https://your-webhook.com/chat',
-    userId: 'user123',
     campaignId: 'spring_sale_2025',
     title: 'Support Chat',
     primaryColor: '#4F46E5'
@@ -38,7 +38,7 @@ Download the files and include them in your project:
 <script>
   initChatWidget({
     webhook: 'https://your-webhook.com/chat',
-    userId: 'user123'
+    campaignId: 5
   });
 </script>
 ```
@@ -51,7 +51,7 @@ Download the files and include them in your project:
 <script>
   initChatWidget({
     webhook: 'https://your-webhook.com/chat',
-    userId: 'user123',
+    campaignId: 5,
     title: 'Customer Support'
   });
 </script>
@@ -62,7 +62,6 @@ Download the files and include them in your project:
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `webhook` | string | `''` | URL to send/receive messages |
-| `userId` | string | auto-generated | Unique user identifier |
 | `sessionId` | string | auto-generated | Session identifier (auto-created if not provided) |
 | `campaignId` | string | `null` | Campaign identifier for backend webhook settings |
 | `title` | string | `'Chat'` | Chat window title |
@@ -73,6 +72,13 @@ Download the files and include them in your project:
 
 ## Webhook Integration
 
+### Request Actions
+
+Each request is accompanied by an `action` field, where `action` can be one of:
+
+- `loadPreviousSession` - When the user opens the chatbot again and the previous chat session should be loaded
+- `sendMessage` - When the user sends a message
+
 ### Outgoing Message (POST to webhook)
 
 When a user sends a message, the widget posts to your webhook URL with this format:
@@ -82,6 +88,18 @@ When a user sends a message, the widget posts to your webhook URL with this form
   "sessionId": "541f2a7e-cc17-4825-a129-1a2cfaf80022",
   "action": "sendMessage",
   "chatInput": "Hello, I need help",
+  "campaignid": 5
+}
+```
+
+### Loading Previous Session
+
+When the widget initializes and finds an existing session, it sends:
+
+```json
+{
+  "sessionId": "541f2a7e-cc17-4825-a129-1a2cfaf80022",
+  "action": "loadPreviousSession",
   "campaignid": 5
 }
 ```
@@ -147,7 +165,7 @@ Simply open `index.html` or `examples/index.html` in your browser. No build proc
   <script>
     initChatWidget({
       webhook: 'https://api.myapp.com/chat',
-      userId: 'user_12345',
+      campaignId: 5,
       title: 'Help Center'
     });
   </script>
@@ -170,8 +188,7 @@ initChatWidget({
 ```javascript
 initChatWidget({
   webhook: 'https://api.myapp.com/chat',
-  campaignId: 'holiday_2025',
-  userId: 'customer_' + Date.now()
+  campaignId: 'holiday_2025'
 });
 ```
 
@@ -229,4 +246,4 @@ If you encounter any issues or have questions:
 
 ## Credits
 
-Created as a lightweight alternative to iframe-based chat widgets. No dependencies required!
+Created as a lightweight, embeddable chat solution. No dependencies required!

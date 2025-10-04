@@ -10,7 +10,6 @@
         constructor(config = {}) {
             this.config = {
                 webhook: config.webhook || window.CHAT_CONFIG?.webhook || '',
-                userId: config.userId || window.CHAT_CONFIG?.userId || this.generateId('user'),
                 sessionId: config.sessionId || window.CHAT_CONFIG?.sessionId || this.generateSessionId(),
                 campaignId: config.campaignId || window.CHAT_CONFIG?.campaignId || null,
                 title: config.title || window.CHAT_CONFIG?.title || 'Chat',
@@ -25,10 +24,6 @@
             this.isTyping = false;
 
             this.init();
-        }
-
-        generateId(prefix) {
-            return prefix + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         }
 
         generateSessionId() {
@@ -49,6 +44,7 @@
             this.applyTheme();
             this.renderMessages();
             this.attachEventListeners();
+            this.loadPreviousSession();
         }
 
         createWidget() {
@@ -103,9 +99,48 @@
             closeBtn.addEventListener('click', () => this.close());
         }
 
+        async loadPreviousSession() {
+            // Check if there are existing messages for this session
+            if (this.messages.length > 0 && this.config.webhook) {
+                try {
+                    const payload = {
+                        sessionId: this.config.sessionId,
+                        action: "loadPreviousSession",
+                        campaignid: this.config.campaignId
+                    };
+
+                    const response = await fetch(this.config.webhook, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        
+                        // Handle response as array with output field
+                        if (Array.isArray(data) && data.length > 0 && data[0].output) {
+                            const botMessage = {
+                                text: data[0].output,
+                                sender: 'bot',
+                                timestamp: new Date().toISOString()
+                            };
+                            this.messages.push(botMessage);
+                            this.saveMessages();
+                            this.renderMessages();
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading previous session:', error);
+                }
+            }
+        }
+
         loadMessages() {
             try {
-                const stored = localStorage.getItem(this.config.storageKey + '_' + this.config.userId);
+                const stored = localStorage.getItem(this.config.storageKey + '_' + this.config.sessionId);
                 return stored ? JSON.parse(stored) : [];
             } catch (error) {
                 console.error('Error loading messages:', error);
@@ -116,7 +151,7 @@
         saveMessages() {
             try {
                 localStorage.setItem(
-                    this.config.storageKey + '_' + this.config.userId,
+                    this.config.storageKey + '_' + this.config.sessionId,
                     JSON.stringify(this.messages)
                 );
             } catch (error) {
