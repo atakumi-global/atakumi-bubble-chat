@@ -63,20 +63,44 @@
             bubble.className = 'chat-bubble-button';
             bubble.setAttribute('aria-label', 'Open chat');
             
-            const defaultIcon = `
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
-                    <circle cx="12" cy="10" r="1.5"/>
-                    <circle cx="8" cy="10" r="1.5"/>
-                    <circle cx="16" cy="10" r="1.5"/>
-                </svg>
-            `;
-            
-            bubble.innerHTML = this.config.bubbleIcon || defaultIcon;
+            // Create default SVG icon safely
+            if (!this.config.bubbleIcon) {
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('viewBox', '0 0 24 24');
+                
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', 'M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z');
+                
+                const circle1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle1.setAttribute('cx', '12');
+                circle1.setAttribute('cy', '10');
+                circle1.setAttribute('r', '1.5');
+                
+                const circle2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle2.setAttribute('cx', '8');
+                circle2.setAttribute('cy', '10');
+                circle2.setAttribute('r', '1.5');
+                
+                const circle3 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle3.setAttribute('cx', '16');
+                circle3.setAttribute('cy', '10');
+                circle3.setAttribute('r', '1.5');
+                
+                svg.appendChild(path);
+                svg.appendChild(circle1);
+                svg.appendChild(circle2);
+                svg.appendChild(circle3);
+                
+                bubble.appendChild(svg);
+            } else {
+                // If custom icon is provided, still use innerHTML for SVG only (not user data)
+                // This is acceptable as bubbleIcon comes from config, not user input
+                bubble.innerHTML = this.config.bubbleIcon;
+            }
             
             const bubbleMessage = document.createElement('div');
             bubbleMessage.className = 'chat-bubble-message';
-            bubbleMessage.textContent = this.config.bubbleMessage;
+            bubbleMessage.textContent = this.config.bubbleMessage; // Safe - uses textContent
             
             document.body.appendChild(bubble);
             document.body.appendChild(bubbleMessage);
@@ -90,26 +114,60 @@
             container.className = 'chat-widget-container';
             container.id = 'chat-widget-container';
             
-            container.innerHTML = `
-                <div class="chat-header">
-                    <span class="chat-title">${this.config.title}</span>
-                    <div class="chat-controls">
-                        <button class="chat-control-btn minimize-btn" title="Minimize">−</button>
-                        <button class="chat-control-btn close-btn" title="Close">×</button>
-                    </div>
-                </div>
-                <div class="chat-messages" id="chat-messages"></div>
-                <div class="chat-input-container">
-                    <input 
-                        type="text" 
-                        class="chat-input" 
-                        id="chat-input" 
-                        placeholder="Type a message..."
-                        autocomplete="off"
-                    >
-                    <button class="send-button" id="send-button">Send</button>
-                </div>
-            `;
+            // Create header
+            const header = document.createElement('div');
+            header.className = 'chat-header';
+            
+            const title = document.createElement('span');
+            title.className = 'chat-title';
+            title.textContent = this.config.title; // Safe - uses textContent
+            
+            const controls = document.createElement('div');
+            controls.className = 'chat-controls';
+            
+            const minimizeBtn = document.createElement('button');
+            minimizeBtn.className = 'chat-control-btn minimize-btn';
+            minimizeBtn.title = 'Minimize';
+            minimizeBtn.textContent = '−';
+            
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'chat-control-btn close-btn';
+            closeBtn.title = 'Close';
+            closeBtn.textContent = '×';
+            
+            controls.appendChild(minimizeBtn);
+            controls.appendChild(closeBtn);
+            header.appendChild(title);
+            header.appendChild(controls);
+            
+            // Create messages container
+            const messagesContainer = document.createElement('div');
+            messagesContainer.className = 'chat-messages';
+            messagesContainer.id = 'chat-messages';
+            
+            // Create input container
+            const inputContainer = document.createElement('div');
+            inputContainer.className = 'chat-input-container';
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'chat-input';
+            input.id = 'chat-input';
+            input.placeholder = 'Type a message...';
+            input.autocomplete = 'off';
+            
+            const sendButton = document.createElement('button');
+            sendButton.className = 'send-button';
+            sendButton.id = 'send-button';
+            sendButton.textContent = 'Send';
+            
+            inputContainer.appendChild(input);
+            inputContainer.appendChild(sendButton);
+            
+            // Assemble container
+            container.appendChild(header);
+            container.appendChild(messagesContainer);
+            container.appendChild(inputContainer);
 
             document.body.appendChild(container);
             this.container = container;
@@ -219,21 +277,38 @@
             const container = document.getElementById('chat-messages');
             if (!container) return;
 
-            container.innerHTML = this.messages.map(msg => `
-                <div class="message ${msg.sender}">
-                    <div class="message-text">${this.escapeHtml(msg.text)}</div>
-                    <div class="message-timestamp">${this.formatTime(msg.timestamp)}</div>
-                </div>
-            `).join('');
+            // Clear container safely
+            container.innerHTML = '';
+
+            // Create message elements using DOM methods
+            this.messages.forEach(msg => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${msg.sender}`;
+                
+                const textDiv = document.createElement('div');
+                textDiv.className = 'message-text';
+                textDiv.textContent = msg.text; // Safe - uses textContent
+                
+                const timestampDiv = document.createElement('div');
+                timestampDiv.className = 'message-timestamp';
+                timestampDiv.textContent = this.formatTime(msg.timestamp);
+                
+                messageDiv.appendChild(textDiv);
+                messageDiv.appendChild(timestampDiv);
+                container.appendChild(messageDiv);
+            });
 
             if (this.isTyping) {
-                container.innerHTML += `
-                    <div class="typing-indicator">
-                        <div class="typing-dot"></div>
-                        <div class="typing-dot"></div>
-                        <div class="typing-dot"></div>
-                    </div>
-                `;
+                const typingDiv = document.createElement('div');
+                typingDiv.className = 'typing-indicator';
+                
+                for (let i = 0; i < 3; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'typing-dot';
+                    typingDiv.appendChild(dot);
+                }
+                
+                container.appendChild(typingDiv);
             }
 
             container.scrollTop = container.scrollHeight;
@@ -314,21 +389,15 @@
         }
 
         close() {
-            if (this.container) {
-                this.container.remove();
+            if (this.container && this.container.parentNode) {
+                this.container.parentNode.removeChild(this.container);
             }
-            if (this.bubble) {
-                this.bubble.remove();
+            if (this.bubble && this.bubble.parentNode) {
+                this.bubble.parentNode.removeChild(this.bubble);
             }
-            if (this.bubbleMessageEl) {
-                this.bubbleMessageEl.remove();
+            if (this.bubbleMessageEl && this.bubbleMessageEl.parentNode) {
+                this.bubbleMessageEl.parentNode.removeChild(this.bubbleMessageEl);
             }
-        }
-
-        escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
         }
 
         formatTime(timestamp) {
