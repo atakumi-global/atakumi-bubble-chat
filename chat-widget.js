@@ -234,16 +234,19 @@
 
                     if (response.ok) {
                         const data = await response.json();
+                        const messageText = this.extractBotMessage(data);
                         
-                        if (Array.isArray(data) && data.length > 0 && data[0].output) {
+                        if (messageText) {
                             const botMessage = {
-                                text: data[0].output,
+                                text: messageText,
                                 sender: 'bot',
                                 timestamp: new Date().toISOString()
                             };
                             this.messages.push(botMessage);
                             this.saveMessages();
                             this.renderMessages();
+                        } else {
+                            console.warn('loadPreviousSession: No valid message found in webhook response', data);
                         }
                     }
                 } catch (error) {
@@ -314,6 +317,42 @@
             container.scrollTop = container.scrollHeight;
         }
 
+        extractBotMessage(data) {
+            // Helper to extract bot message from various response formats
+            // Supports multiple response shapes for flexibility
+            
+            // Format 1: Array with output field - [{ "output": "message" }]
+            if (Array.isArray(data) && data.length > 0) {
+                if (data[0].output) {
+                    return String(data[0].output);
+                }
+                if (data[0].message) {
+                    return String(data[0].message);
+                }
+            }
+            
+            // Format 2: Object with output field - { "output": "message" }
+            if (data && typeof data === 'object' && !Array.isArray(data)) {
+                if (data.output) {
+                    return String(data.output);
+                }
+                if (data.message) {
+                    return String(data.message);
+                }
+                if (data.response) {
+                    return String(data.response);
+                }
+            }
+            
+            // Format 3: Raw string
+            if (typeof data === 'string' && data.trim()) {
+                return data.trim();
+            }
+            
+            // No valid message found
+            return null;
+        }
+
         async sendMessage() {
             const input = document.getElementById('chat-input');
             const text = input.value.trim();
@@ -354,16 +393,19 @@
 
                     if (response.ok) {
                         const data = await response.json();
+                        const messageText = this.extractBotMessage(data);
                         
-                        if (Array.isArray(data) && data.length > 0 && data[0].output) {
+                        if (messageText) {
                             const botMessage = {
-                                text: data[0].output,
+                                text: messageText,
                                 sender: 'bot',
                                 timestamp: new Date().toISOString()
                             };
                             this.messages.push(botMessage);
                             this.saveMessages();
                             this.renderMessages();
+                        } else {
+                            console.warn('sendMessage: No valid message found in webhook response', data);
                         }
                     }
                 } catch (error) {

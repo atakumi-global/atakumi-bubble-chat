@@ -109,8 +109,9 @@ When the widget initializes and finds an existing session, it sends:
 
 ### Expected Response
 
-Your webhook should respond with an array containing the output:
+Your webhook should respond with one of the following formats. The widget will automatically detect and extract the message:
 
+#### Format 1: Array with output field (Recommended)
 ```json
 [
   {
@@ -118,6 +119,43 @@ Your webhook should respond with an array containing the output:
   }
 ]
 ```
+
+#### Format 2: Array with message field
+```json
+[
+  {
+    "message": "Hello! How can I assist you today?"
+  }
+]
+```
+
+#### Format 3: Object with output field
+```json
+{
+  "output": "Hello! How can I assist you today?"
+}
+```
+
+#### Format 4: Object with message field
+```json
+{
+  "message": "Hello! How can I assist you today?"
+}
+```
+
+#### Format 5: Object with response field
+```json
+{
+  "response": "Hello! How can I assist you today?"
+}
+```
+
+#### Format 6: Raw string
+```json
+"Hello! How can I assist you today?"
+```
+
+**Note:** If the webhook response doesn't match any of these formats, a warning will be logged to the console and no message will be displayed.
 
 ## Project Structure
 
