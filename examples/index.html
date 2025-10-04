@@ -292,14 +292,14 @@
                 <h3 style="margin-bottom: 10px; font-size: 16px; color: #374151;">Embed Code</h3>
                 
                 <div class="code-block">
-                    <button class="copy-button" onclick="copyCode()">Copy</button>
+                    <button class="copy-button" onclick="copyCode(event)">Copy</button>
                     <pre id="embedCode"></pre>
                 </div>
 
                 <h3 style="margin: 20px 0 10px 0; font-size: 16px; color: #374151;">JavaScript Only</h3>
                 
                 <div class="code-block">
-                    <button class="copy-button" onclick="copyJsCode()">Copy</button>
+                    <button class="copy-button" onclick="copyJsCode(event)">Copy</button>
                     <pre id="jsCode"></pre>
                 </div>
             </div>
@@ -397,7 +397,7 @@
         }
 
         // Copy embed code to clipboard
-        function copyCode() {
+        function copyCode(event) {
             const config = getConfig();
             const code = `<link rel="stylesheet" href="https://your-domain.com/chat-widget.css">
 <script src="https://your-domain.com/chat-widget.js"></script>
@@ -418,7 +418,7 @@
         }
 
         // Copy JS code to clipboard
-        function copyJsCode() {
+        function copyJsCode(event) {
             const config = getConfig();
             const code = `initChatWidget({
   webhook: '${config.webhook || ''}',${config.campaignId ? `\n  campaignId: ${config.campaignId},` : ''}
